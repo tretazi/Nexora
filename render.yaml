@@ -1,0 +1,22 @@
+databases:
+  - name: nexoradb
+    plan: free
+    databaseName: nexora
+    user: nexora
+
+services:
+  - type: web
+    plan: free
+    name: nexora-api
+    runtime: python
+    buildCommand: "cd projets && ./build.sh"
+    startCommand: "cd projets && python -m gunicorn budget_tracker.asgi:application -k uvicorn.workers.UvicornWorker"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexoradb
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
