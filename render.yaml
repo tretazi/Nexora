@@ -20,3 +20,21 @@ services:
         generateValue: true
       - key: WEB_CONCURRENCY
         value: 4
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        value: "francktretazi@gmail.com"
+      - key: EMAIL_HOST_PASSWORD
+        value: "REPLACE_WITH_APP_PASSWORD"
+      - key: DEFAULT_FROM_EMAIL
+        value: "Nexora <francktretazi@gmail.com>"
+      - key: BACKEND_URL
+        value: "https://nexora-api.onrender.com"
+      - key: FRONTEND_URL
+        value: "https://REPLACE_WITH_FRONTEND_URL"

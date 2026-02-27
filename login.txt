@@ -4,4 +4,19 @@ mot de passe : francky12francky
 utilisateur: Francky
 mot de passe : josejozzjose10
 
+$env:EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
+$env:EMAIL_HOST="smtp.gmail.com"
+$env:EMAIL_PORT="587"
+$env:EMAIL_USE_TLS="True"
+$env:EMAIL_HOST_USER="francktretazi@gmail.com"
+$env:EMAIL_HOST_PASSWORD="ncxbqdoajentrkzd"
+$env:DEFAULT_FROM_EMAIL="Nexora <francktretazi@gmail.com>"
+$env:BACKEND_URL="http://127.0.0.1:8000"
+$env:FRONTEND_URL="http://localhost:5173"
 
+python manage.py shell -c "from django.core.mail import send_mail; from django.conf import settings; print(send_mail('Test Nexora','Test email','%s' % settings.DEFAULT_FROM_EMAIL,['francktretazi@gmail.com'],fail_silently=False))"
+
+
+postgres://koyeb-adm:npg_5StzIBMYP6HK@ep-muddy-scene-ai3b8hu7.c-4.us-east-1.pg.koyeb.app/koyebdb
+
+secret key = FrW0W2w8LkCS5gZSLLUKtQJRqNwF9lMU00_CSgrfNuHmpT3OwfhjpG-n8HlGW2EUaEXUqdShBjWQENrFr9NtEg
