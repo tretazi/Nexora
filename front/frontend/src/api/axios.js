@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../utils/auth';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/';
+
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: apiBaseUrl,
 });
 
 const publicEndpoints = ['token/', 'token/refresh/', 'register/'];
@@ -38,7 +40,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const refreshResponse = await axios.post('http://127.0.0.1:8000/api/token/refresh/', {
+        const refreshResponse = await axios.post(`${apiBaseUrl}token/refresh/`, {
           refresh: refreshToken,
         });
 
