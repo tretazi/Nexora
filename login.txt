@@ -20,3 +20,5 @@ python manage.py shell -c "from django.core.mail import send_mail; from django.c
 postgres://koyeb-adm:npg_5StzIBMYP6HK@ep-muddy-scene-ai3b8hu7.c-4.us-east-1.pg.koyeb.app/koyebdb
 
 secret key = FrW0W2w8LkCS5gZSLLUKtQJRqNwF9lMU00_CSgrfNuHmpT3OwfhjpG-n8HlGW2EUaEXUqdShBjWQENrFr9NtEg
+
+rswz ltcu bkyo addx

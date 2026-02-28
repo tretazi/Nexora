@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 
 class Wallet(models.Model):
@@ -66,3 +67,15 @@ class UserPreference(models.Model):
 
     def __str__(self):
         return f'Preferences({self.user.username})'
+
+
+class EmailVerificationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_verification_tokens')
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_valid(self):
+        return self.used_at is None and self.expires_at > timezone.now()

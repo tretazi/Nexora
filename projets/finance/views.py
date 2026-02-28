@@ -1,15 +1,15 @@
 import csv
+import hashlib
 import io
 from datetime import datetime
 from decimal import Decimal
 
 from django.conf import settings
-from django.core import signing
-from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Budget, Category, Transaction, UserPreference, Wallet
+from .models import Budget, Category, EmailVerificationToken, Transaction, UserPreference, Wallet
 from .serializers import (
     BudgetSerializer,
     CategorySerializer,
@@ -28,6 +28,7 @@ from .serializers import (
     UserSerializer,
     WalletSerializer,
 )
+from .tasks import send_verification_email_task
 
 
 class RegisterView(generics.CreateAPIView):
@@ -39,19 +40,11 @@ class RegisterView(generics.CreateAPIView):
         with transaction.atomic():
             user = serializer.save()
             if user.email:
-                token = signing.dumps({'user_id': user.id}, salt='email-verify')
-                verify_url = f"{settings.BACKEND_URL}/api/verify-email/?token={token}"
-                send_mail(
-                    subject='Activez votre compte Nexora',
-                    message=(
-                        "Bienvenue sur Nexora.\n\n"
-                        f"Cliquez sur ce lien pour activer votre compte:\n{verify_url}\n\n"
-                        "Si vous n'etes pas a l'origine de cette inscription, ignorez ce message."
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
+                try:
+                    send_verification_email_task.delay(user.id, user.email)
+                except Exception:
+                    # Fallback for environments where a worker/broker is not yet available.
+                    send_verification_email_task(user.id, user.email)
 
 
 class WalletViewSet(viewsets.ModelViewSet):
@@ -437,10 +430,19 @@ class VerifyEmailView(APIView):
         if not token:
             return redirect(f"{settings.FRONTEND_URL}/login?verified=missing")
         try:
-            payload = signing.loads(token, salt='email-verify', max_age=60 * 60 * 24)
-            user = User.objects.get(id=payload.get('user_id'))
+            token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+            record = EmailVerificationToken.objects.select_related('user').get(
+                token_hash=token_hash,
+                used_at__isnull=True,
+            )
+            if record.expires_at <= timezone.now():
+                return redirect(f"{settings.FRONTEND_URL}/login?verified=invalid")
+
+            user = record.user
             user.is_active = True
             user.save(update_fields=['is_active'])
+            record.used_at = timezone.now()
+            record.save(update_fields=['used_at'])
             return redirect(f"{settings.FRONTEND_URL}/login?verified=success")
-        except (signing.BadSignature, signing.SignatureExpired, User.DoesNotExist):
+        except (EmailVerificationToken.DoesNotExist, User.DoesNotExist):
             return redirect(f"{settings.FRONTEND_URL}/login?verified=invalid")
